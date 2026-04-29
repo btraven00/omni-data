@@ -28,7 +28,7 @@ stages:
       cores: 2
     outputs:
       - id: rawdata.dir
-        path: "{dataset}.mtx"
+        path: "{dataset}.mtx.gz"
     modules:
       - id: be1
         name: "be1 scRNA dataset (GEO GSE243665)"

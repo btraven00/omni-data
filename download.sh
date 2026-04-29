@@ -94,4 +94,9 @@ if [[ -n $extra ]]; then
 fi
 
 echo "Full command: hapiq ${args[*]}"
-exec hapiq "${args[@]}"
+hapiq "${args[@]}"
+
+if [[ -n $include_ext ]]; then
+    downloaded=$(find "$target" -name "*${include_ext}" | head -1)
+    [[ -n $downloaded ]] && ln -sf "$downloaded" "$output_dir/$name${include_ext}"
+fi

@@ -127,9 +127,9 @@ if [[ ${#matches[@]} -eq 1 ]]; then
     case "$src" in
         *.tar.gz|*.mtx.gz|*.tsv.gz|*.csv.gz|*.txt.gz|*.h5ad.gz) ext="${src##*${src%.*.*}.}" ;;
     esac
-    mv "$src" "$output_dir/$name.$ext"
+    cp "$src" "$output_dir/$name.$ext"
 else
     for f in "${matches[@]}"; do
-        mv "$f" "$output_dir/$(basename "$f")"
+        cp "$f" "$output_dir/$(basename "$f")"
     done
 fi

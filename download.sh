@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
         --output_dir)       output_dir=$2;       shift 2 ;;
         --name)             name=$2;             shift 2 ;;
         --source)           source=$2;           shift 2 ;;
-        --id)               id=$2;               shift 2 ;;
+        --id|--accession)   id=$2;               shift 2 ;;
         --hash)             hash=$2;             shift 2 ;;
         --include-ext|--include_ext)      include_ext=$2;      shift 2 ;;
         --exclude-ext|--exclude_ext)      exclude_ext=$2;      shift 2 ;;

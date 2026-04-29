@@ -38,7 +38,7 @@ stages:
           commit: main
         parameters:
           - source: "geo"
-            id: "GSE243665"
+            accession: "GSE243665"
             include_ext: ".mtx.gz"
             # tsv.gz
             max_file_size: "200MB"

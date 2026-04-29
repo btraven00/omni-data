@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this module in your publication, please cite as below."
+type: software
+title: "omni-data"
+abstract: |
+  Hapiq-backed data download module for omnibenchmark pipelines.
+authors:
+  - family-names: "carrillo"
+    given-names: "ben"
+    email: "ben.uzh@proton.me"
+date-released: "2026-04-30"
+version: "0.1.0"
+license: MIT
+keywords:
+  - bioinformatics
+  - data-download
+  - benchmark
+  - omnibenchmark
+  - module
+  - hapiq
+references:
+  - title: "hapiq"
+    authors:
+      - family-names: "carrillo"
+        given-names: "ben"
+    type: software
+    url: "https://github.com/btraven00/hapiq"

@@ -1,0 +1,15 @@
+# OmniBenchmark outputs
+out/
+.snakemake/
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# OS
+.DS_Store
+*.swp
+*~
+
+# Logs
+*.log

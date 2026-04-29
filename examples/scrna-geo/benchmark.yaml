@@ -1,0 +1,43 @@
+# Example benchmark: download scRNA-seq data from GEO via omni-data
+#
+# This shows how to wire omni-data as a data-download stage in an
+# omnibenchmark pipeline. The module calls hapiq under the hood; the
+# benchmark passes source/id (and any optional filters) as parameters.
+#
+# Dataset: be1 (GSE243665) — used in the split-stages-plan scRNA benchmark.
+# Source:  https://github.com/btraven00/omni-data
+
+name: scrna-geo-example
+id: scrna_geo_example
+description: >
+  Minimal example that fetches a GEO scRNA-seq dataset (be1 / GSE243665)
+  using the omni-data hapiq-backed download module.
+benchmarker: "example"
+version: "0.0.1"
+
+software_backend: "conda"
+
+software_environments:
+  omni_data:
+    name: omni-data conda env
+    conda: ../../envs/omni-data.yml
+
+stages:
+  - id: one-data
+    resources:
+      cores: 2
+    outputs:
+      - id: rawdata.dir
+        path: "{dataset}/"
+    modules:
+      - id: be1
+        name: "be1 scRNA dataset (GEO GSE243665)"
+        software_environment: omni_data
+        repository:
+          url: ../..   # path to this (omni-data) module
+          commit: main
+        parameters:
+          - source: "geo"
+            id: "GSE243665"
+            include_ext: ".mtx.gz,.tsv.gz"
+            max_file_size: "200MB"

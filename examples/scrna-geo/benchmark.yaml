@@ -28,16 +28,17 @@ stages:
       cores: 2
     outputs:
       - id: rawdata.dir
-        path: "{dataset}/"
+        path: "{dataset}.mtx"
     modules:
       - id: be1
         name: "be1 scRNA dataset (GEO GSE243665)"
         software_environment: omni_data
         repository:
-          url: ../..   # path to this (omni-data) module
+          url: https://github.com/btraven00/omni-data
           commit: main
         parameters:
           - source: "geo"
             id: "GSE243665"
-            include_ext: ".mtx.gz,.tsv.gz"
+            include_ext: ".mtx.gz"
+            # tsv.gz
             max_file_size: "200MB"

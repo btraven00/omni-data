@@ -72,10 +72,10 @@ done
 [[ -n $source     ]] || die "--source is required"
 [[ -n $id         ]] || die "--id is required"
 
-target="$output_dir/$name"
-mkdir -p "$output_dir"
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
 
-args=(download "$source" "$id" --out "$target" -y)
+args=(download "$source" "$id" --out "$tmpdir" -y)
 [[ -n $hash             ]] && args+=(--hash "$hash")
 [[ -n $include_ext      ]] && args+=(--include-ext "$include_ext")
 [[ -n $exclude_ext      ]] && args+=(--exclude-ext "$exclude_ext")
@@ -96,7 +96,40 @@ fi
 echo "Full command: hapiq ${args[*]}"
 hapiq "${args[@]}"
 
+# collect matching files; if include_ext is set filter by it, otherwise take all data files
 if [[ -n $include_ext ]]; then
-    downloaded=$(find "$target" -name "*${include_ext}" | head -1)
-    [[ -n $downloaded ]] && ln -sf "$downloaded" "$output_dir/$name${include_ext}"
+    # include_ext may be comma-separated; build a find expression for each extension
+    mapfile -t exts < <(tr ',' '\n' <<< "$include_ext")
+    find_args=()
+    for ext in "${exts[@]}"; do
+        [[ ${#find_args[@]} -gt 0 ]] && find_args+=(-o)
+        find_args+=(-name "*${ext}")
+    done
+    mapfile -t matches < <(find "$tmpdir" \( "${find_args[@]}" \) -type f | sort)
+else
+    mapfile -t matches < <(find "$tmpdir" -type f -not -name "hapiq.json" | sort)
+fi
+
+[[ ${#matches[@]} -eq 0 ]] && { echo "error: no matching files found after download" >&2; exit 1; }
+
+# enforce limit_files via the wrapper (hapiq may not honour it for cached runs)
+if [[ -n $limit_files && $limit_files -gt 0 ]]; then
+    matches=("${matches[@]:0:$limit_files}")
+fi
+
+mkdir -p "$output_dir"
+
+if [[ ${#matches[@]} -eq 1 ]]; then
+    # single file: rename to $name<ext> for a predictable output path
+    src="${matches[0]}"
+    ext="${src##*.}"
+    # preserve compound extensions like .mtx.gz
+    case "$src" in
+        *.tar.gz|*.mtx.gz|*.tsv.gz|*.csv.gz|*.txt.gz|*.h5ad.gz) ext="${src##*${src%.*.*}.}" ;;
+    esac
+    mv "$src" "$output_dir/$name.$ext"
+else
+    for f in "${matches[@]}"; do
+        mv "$f" "$output_dir/$(basename "$f")"
+    done
 fi

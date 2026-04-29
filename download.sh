@@ -73,7 +73,7 @@ done
 [[ -n $id         ]] || die "--id is required"
 
 target="$output_dir/$name"
-mkdir -p "$target"
+mkdir -p "$output_dir"
 
 args=(download "$source" "$id" --out "$target" -y)
 [[ -n $hash             ]] && args+=(--hash "$hash")

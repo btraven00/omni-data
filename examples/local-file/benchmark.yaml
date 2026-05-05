@@ -35,4 +35,4 @@ stages:
           url: https://github.com/btraven00/omni-data
           commit: main
         parameters:
-          - id: "file:///absolute/path/to/your/data.csv"
+          - uri: "file:///absolute/path/to/your/data.csv"

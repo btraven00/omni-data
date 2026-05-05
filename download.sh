@@ -2,36 +2,41 @@
 # omni-data default entrypoint: download a dataset via hapiq.
 #
 # Required omnibenchmark args:
-#   --output_dir <dir>   Output directory for the downloaded files.
-#   --name <id>          Module name/identifier (used as the dataset subfolder).
+#   --output_dir <dir>     Output directory for the downloaded files.
+#   --name <id>            Module name/identifier (used as the dataset subfolder).
 #
-# Required hapiq args:
-#   --source <src>       Repository source (geo, zenodo, figshare, sra,
-#                        ensembl, vcp, scperturb, biostudies, hca).
-#                        Omit when --id is a file:// URI (inferred automatically).
-#   --id <accession>     Accession ID within that source.
-#                        Use a file:// URI (e.g. file:///data/foo.csv) to copy
-#                        from the local filesystem (non-reproducible).
+# Provide exactly one of:
+#   --accession <id>       Repository accession (e.g. GSE243665, 12345678).
+#                          Requires --source.
+#   --uri <uri>            URI to fetch. --source is inferred from the scheme:
+#                            file://   local path (non-reproducible)
+#                            http/https://  passed to hapiq's url downloader
+#                            s3://     not yet implemented
+#
+# Required with --accession:
+#   --source <src>         Repository source: geo, zenodo, figshare, sra,
+#                          ensembl, vcp, scperturb, biostudies, hca.
 #
 # Optional:
-#   --hash <algo:hex>    Verify the single downloaded file against this hash.
-#   --include-ext <csv>  Comma-separated extensions to include.
-#   --exclude-ext <csv>  Comma-separated extensions to skip.
-#   --max-file-size <s>  Skip files larger than this (e.g. 500MB).
-#   --filename-pattern   Glob to filter filenames.
-#   --subset <csv>       Sub-items to download (e.g. GSM IDs within a GSE).
-#   --organism <str>     Restrict to organism substring match.
-#   --limit-files <n>    Stop after this many files.
-#   --raw                Also download raw FASTQ via ENA/SRA.
-#   --timeout <sec>      Per-run timeout (default: hapiq's own default).
-#   --extra <"...">      Pass-through string of additional hapiq flags.
+#   --hash <algo:hex>      Verify the single downloaded file against this hash.
+#   --include-ext <csv>    Comma-separated extensions to include.
+#   --exclude-ext <csv>    Comma-separated extensions to skip.
+#   --max-file-size <s>    Skip files larger than this (e.g. 500MB).
+#   --filename-pattern     Glob to filter filenames.
+#   --subset <csv>         Sub-items to download (e.g. GSM IDs within a GSE).
+#   --organism <str>       Restrict to organism substring match.
+#   --limit-files <n>      Stop after this many files.
+#   --raw                  Also download raw FASTQ via ENA/SRA.
+#   --timeout <sec>        Per-run timeout (default: hapiq's own default).
+#   --extra <"...">        Pass-through string of additional hapiq flags.
 
 set -euo pipefail
 
 output_dir=""
 name=""
 source=""
-id=""
+accession=""
+uri=""
 hash=""
 include_ext=""
 exclude_ext=""
@@ -51,7 +56,8 @@ while [[ $# -gt 0 ]]; do
         --output_dir)       output_dir=$2;       shift 2 ;;
         --name)             name=$2;             shift 2 ;;
         --source)           source=$2;           shift 2 ;;
-        --id|--accession)   id=$2;               shift 2 ;;
+        --accession)        accession=$2;        shift 2 ;;
+        --uri)              uri=$2;              shift 2 ;;
         --hash)             hash=$2;             shift 2 ;;
         --include-ext|--include_ext)      include_ext=$2;      shift 2 ;;
         --exclude-ext|--exclude_ext)      exclude_ext=$2;      shift 2 ;;
@@ -72,19 +78,26 @@ done
 
 [[ -n $output_dir ]] || die "--output_dir is required"
 [[ -n $name       ]] || die "--name is required"
-[[ -n $id         ]] || die "--id is required"
 
-# Auto-detect file:// handler from the URI scheme
-[[ $id == file://* && -z $source ]] && source="file"
-[[ $source == "file" && $id != file://* ]] && die "source=file requires a file:// URI (got: $id)"
+[[ -n $accession && -n $uri ]] && die "use either --accession or --uri, not both"
+[[ -n $accession || -n $uri ]] || die "one of --accession or --uri is required"
 
-[[ -n $source ]] || die "--source is required"
+if [[ -n $uri ]]; then
+    case "$uri" in
+        file://*)        source="file" ;;
+        http://*|https://*) source="url"; accession="$uri" ;;
+        s3://*)          die "URI scheme not yet implemented: s3://" ;;
+        *)               die "unrecognised URI — expected a scheme (file://, http://, https://, s3://…): $uri" ;;
+    esac
+else
+    [[ -n $source ]] || die "--source is required with --accession"
+fi
 
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
 
 if [[ $source == "file" ]]; then
-    local_path="${id#file://}"
+    local_path="${uri#file://}"
     [[ -e $local_path ]] || die "local path does not exist: $local_path"
     echo "WARNING: source=file is non-reproducible — result depends on local filesystem state" >&2
     if [[ -f $local_path ]]; then
@@ -95,7 +108,7 @@ if [[ $source == "file" ]]; then
         die "local path is neither a file nor a directory: $local_path"
     fi
 else
-    args=(download "$source" "$id" --out "$tmpdir" -y)
+    args=(download "$source" "$accession" --out "$tmpdir" -y)
     [[ -n $hash             ]] && args+=(--hash "$hash")
     [[ -n $include_ext      ]] && args+=(--include-ext "$include_ext")
     [[ -n $exclude_ext      ]] && args+=(--exclude-ext "$exclude_ext")

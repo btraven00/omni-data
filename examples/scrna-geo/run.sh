@@ -11,7 +11,7 @@ pixi run --manifest-path "$ROOT/pixi.toml" bash "$ROOT/download.sh" \
   --output_dir out \
   --name be1 \
   --source geo \
-  --id GSE243665 \
+  --accession GSE243665 \
   --include-ext ".mtx.gz,.tsv.gz" \
   --max-file-size 200MB
 

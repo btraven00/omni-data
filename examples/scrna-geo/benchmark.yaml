@@ -40,6 +40,5 @@ stages:
           - source: "geo"
             accession: "GSE243665"
             include_ext: ".mtx.gz"
-            # tsv.gz
             max_file_size: "200MB"
             limit_files: 1

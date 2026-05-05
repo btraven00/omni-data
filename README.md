@@ -24,7 +24,7 @@ pixi run bash download.sh \
   --output_dir <dir> \
   --name <id> \
   --source <geo|zenodo|figshare|sra|ensembl|vcp|scperturb|biostudies|hca> \
-  --id <accession> \
+  --accession <accession> \
   [--hash <algo:hex>] \
   [--include-ext .h5,.h5ad] \
   [--exclude-ext .bam,.fastq.gz] \
@@ -38,6 +38,9 @@ pixi run bash download.sh \
   [--extra "<extra hapiq flags>"]
 ```
 
+Use `--uri <uri>` instead of `--source`/`--accession` for URI-based sources
+(see below). The two forms are mutually exclusive.
+
 Files land in `<output_dir>/<name>/` along with hapiq's `hapiq.json` witness
 file (provenance + per-file checksums).
 
@@ -48,26 +51,35 @@ pixi run bash download.sh \
   --output_dir out \
   --name pbmc3k \
   --source geo \
-  --id GSE149383 \
+  --accession GSE149383 \
   --include-ext .h5,.h5ad
 ```
 
-### Local file (non-reproducible)
+### Direct URL download
 
-Use `--source file` with a `file://` URI to copy a file from the local
-filesystem instead of fetching from a remote repository. This is useful for
-bootstrapping with data you already have on disk.
+Use `--uri` with an `http://` or `https://` URL to fetch a file directly via
+hapiq's `url` downloader. `--source` is inferred automatically.
 
 ```sh
 pixi run bash download.sh \
   --output_dir out \
   --name mydata \
-  --id file:///absolute/path/to/data.csv
+  --uri https://example.com/data.csv
 ```
 
-The `file://` scheme is recognised automatically — `--source` can be omitted.
+### Local file (non-reproducible)
 
-> **Warning:** `source=file` is flagged as non-reproducible at runtime.
+Use `--uri file:///...` to copy a file from the local filesystem instead of
+fetching from a remote repository. `--source` is inferred automatically.
+
+```sh
+pixi run bash download.sh \
+  --output_dir out \
+  --name mydata \
+  --uri file:///absolute/path/to/data.csv
+```
+
+> **Warning:** `file://` URIs are flagged as non-reproducible at runtime.
 > The result depends on local filesystem state and cannot be replayed by
 > others or in CI without the same file present.
 
@@ -80,7 +92,7 @@ pixi run bash download.sh \
   --output_dir out \
   --name palantir \
   --source figshare \
-  --id 12345678 \
+  --accession 12345678 \
   --hash sha256:abc123...
 ```
 

@@ -24,6 +24,6 @@ fi
 pixi run --manifest-path "$ROOT/pixi.toml" bash "$ROOT/download.sh" \
   --output_dir "$ROOT/examples/local-file/out" \
   --name localdata \
-  --id "file://$input"
+  --uri "file://$input"
 
 echo "Files written to examples/local-file/out/"

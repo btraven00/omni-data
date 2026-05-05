@@ -1,6 +1,7 @@
 # OmniBenchmark outputs
 out/
 .snakemake/
+.obmr/
 
 # pixi environments
 .pixi/*

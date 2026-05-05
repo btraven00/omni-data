@@ -1,3 +1,0 @@
-default:
-    plan: benchmark.yaml
-omnibenchmark: {}

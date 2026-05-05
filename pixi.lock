@@ -4,14 +4,13 @@ environments:
     channels:
     - url: https://prefix.dev/almost-conductor/
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/bioconda/
     options:
       pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bash-5.2.37-h4be8908_0.conda
-      - conda: https://prefix.dev/almost-conductor/linux-64/hapiq-0.0.0.dev0771958-h1ab9cca_0.conda
+      - conda: https://prefix.dev/almost-conductor/linux-64/hapiq-0.0.0.dev7858235-h8706b04_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libgcc-15.2.0-he0feb66_18.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libgomp-15.2.0-he0feb66_18.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.6-hdb14827_0.conda
@@ -42,12 +41,12 @@ packages:
   license_family: GPL
   size: 1929937
   timestamp: 1748631191479
-- conda: https://prefix.dev/almost-conductor/linux-64/hapiq-0.0.0.dev0771958-h1ab9cca_0.conda
-  sha256: c0ed2c6e3d0a2c2df8e21196f09629669ff5e98dc641ea64c521c46bf248b72a
-  md5: 43fda9dc0457ee93c30a3a5445b6273f
+- conda: https://prefix.dev/almost-conductor/linux-64/hapiq-0.0.0.dev7858235-h8706b04_0.conda
+  sha256: 33f4425daca6cd7a5551c179063b6efde1c0edb3ac86cb17e853b4394531b015
+  md5: 26c4aba6ff569fd5e30f39276f28beea
   license: GPL-3.0-only
-  size: 3308670
-  timestamp: 1777464533991
+  size: 4938644
+  timestamp: 1777983663398
 - conda: https://conda.anaconda.org/conda-forge/linux-64/libgcc-15.2.0-he0feb66_18.conda
   sha256: faf7d2017b4d718951e3a59d081eb09759152f93038479b768e3d612688f83f5
   md5: 0aa00f03f9e39fb9876085dee11a85d4

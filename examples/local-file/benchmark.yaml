@@ -1,0 +1,38 @@
+# Example benchmark: load a local CSV file via the file:// handler.
+#
+# Demonstrates the non-reproducible local-file source. In a real pipeline
+# replace sample.csv with an absolute path to your data file.
+#
+# NOTE: this source is intentionally non-reproducible — it depends on the
+# local filesystem. Use a remote source (geo, zenodo, …) for shareable
+# benchmarks.
+
+name: local-file-example
+id: local_file_example
+description: >
+  Minimal example that copies a local CSV file into the omni-data output
+  directory using the file:// URI handler (non-reproducible).
+benchmarker: "example"
+version: "0.0.1"
+
+software_backend: "conda"
+
+software_environments:
+  omni_data:
+    name: omni-data conda env
+    conda: ../../envs/omni-data.yml
+
+stages:
+  - id: one-data
+    outputs:
+      - id: rawdata.csv
+        path: "{dataset}.csv"
+    modules:
+      - id: localdata
+        name: "local CSV file (non-reproducible)"
+        software_environment: omni_data
+        repository:
+          url: https://github.com/btraven00/omni-data
+          commit: main
+        parameters:
+          - id: "file:///absolute/path/to/your/data.csv"

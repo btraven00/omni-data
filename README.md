@@ -52,6 +52,25 @@ pixi run bash download.sh \
   --include-ext .h5,.h5ad
 ```
 
+### Local file (non-reproducible)
+
+Use `--source file` with a `file://` URI to copy a file from the local
+filesystem instead of fetching from a remote repository. This is useful for
+bootstrapping with data you already have on disk.
+
+```sh
+pixi run bash download.sh \
+  --output_dir out \
+  --name mydata \
+  --id file:///absolute/path/to/data.csv
+```
+
+The `file://` scheme is recognised automatically — `--source` can be omitted.
+
+> **Warning:** `source=file` is flagged as non-reproducible at runtime.
+> The result depends on local filesystem state and cannot be replayed by
+> others or in CI without the same file present.
+
 ### Single-file integrity check
 
 For datasets that resolve to a single file, pin the expected hash:

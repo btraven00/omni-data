@@ -8,7 +8,10 @@
 # Required hapiq args:
 #   --source <src>       Repository source (geo, zenodo, figshare, sra,
 #                        ensembl, vcp, scperturb, biostudies, hca).
+#                        Omit when --id is a file:// URI (inferred automatically).
 #   --id <accession>     Accession ID within that source.
+#                        Use a file:// URI (e.g. file:///data/foo.csv) to copy
+#                        from the local filesystem (non-reproducible).
 #
 # Optional:
 #   --hash <algo:hex>    Verify the single downloaded file against this hash.
@@ -69,32 +72,50 @@ done
 
 [[ -n $output_dir ]] || die "--output_dir is required"
 [[ -n $name       ]] || die "--name is required"
-[[ -n $source     ]] || die "--source is required"
 [[ -n $id         ]] || die "--id is required"
+
+# Auto-detect file:// handler from the URI scheme
+[[ $id == file://* && -z $source ]] && source="file"
+[[ $source == "file" && $id != file://* ]] && die "source=file requires a file:// URI (got: $id)"
+
+[[ -n $source ]] || die "--source is required"
 
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
 
-args=(download "$source" "$id" --out "$tmpdir" -y)
-[[ -n $hash             ]] && args+=(--hash "$hash")
-[[ -n $include_ext      ]] && args+=(--include-ext "$include_ext")
-[[ -n $exclude_ext      ]] && args+=(--exclude-ext "$exclude_ext")
-[[ -n $max_file_size    ]] && args+=(--max-file-size "$max_file_size")
-[[ -n $filename_pattern ]] && args+=(--filename-pattern "$filename_pattern")
-[[ -n $subset           ]] && args+=(--subset "$subset")
-[[ -n $organism         ]] && args+=(--organism "$organism")
-[[ -n $limit_files      ]] && args+=(--limit-files "$limit_files")
-[[ -n $raw              ]] && args+=(--raw)
-[[ -n $timeout          ]] && args+=(--timeout "$timeout")
+if [[ $source == "file" ]]; then
+    local_path="${id#file://}"
+    [[ -e $local_path ]] || die "local path does not exist: $local_path"
+    echo "WARNING: source=file is non-reproducible — result depends on local filesystem state" >&2
+    if [[ -f $local_path ]]; then
+        cp "$local_path" "$tmpdir/$(basename "$local_path")"
+    elif [[ -d $local_path ]]; then
+        cp -r "$local_path"/. "$tmpdir/"
+    else
+        die "local path is neither a file nor a directory: $local_path"
+    fi
+else
+    args=(download "$source" "$id" --out "$tmpdir" -y)
+    [[ -n $hash             ]] && args+=(--hash "$hash")
+    [[ -n $include_ext      ]] && args+=(--include-ext "$include_ext")
+    [[ -n $exclude_ext      ]] && args+=(--exclude-ext "$exclude_ext")
+    [[ -n $max_file_size    ]] && args+=(--max-file-size "$max_file_size")
+    [[ -n $filename_pattern ]] && args+=(--filename-pattern "$filename_pattern")
+    [[ -n $subset           ]] && args+=(--subset "$subset")
+    [[ -n $organism         ]] && args+=(--organism "$organism")
+    [[ -n $limit_files      ]] && args+=(--limit-files "$limit_files")
+    [[ -n $raw              ]] && args+=(--raw)
+    [[ -n $timeout          ]] && args+=(--timeout "$timeout")
 
-if [[ -n $extra ]]; then
-    # shellcheck disable=SC2206
-    extra_arr=($extra)
-    args+=("${extra_arr[@]}")
+    if [[ -n $extra ]]; then
+        # shellcheck disable=SC2206
+        extra_arr=($extra)
+        args+=("${extra_arr[@]}")
+    fi
+
+    echo "Full command: hapiq ${args[*]}"
+    hapiq "${args[@]}"
 fi
-
-echo "Full command: hapiq ${args[*]}"
-hapiq "${args[@]}"
 
 # collect matching files; if include_ext is set filter by it, otherwise take all data files
 if [[ -n $include_ext ]]; then

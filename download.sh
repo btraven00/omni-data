@@ -15,7 +15,8 @@
 #
 # Required with --accession:
 #   --source <src>         Repository source: geo, zenodo, figshare, sra,
-#                          ensembl, vcp, scperturb, biostudies, hca.
+#                          ensembl, vcp, scperturb, biostudies, hca,
+#                          experimenthub, scanpy.
 #
 # Optional:
 #   --hash <algo:hex>      Verify the single downloaded file against this hash.

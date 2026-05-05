@@ -32,7 +32,7 @@ See [`examples/`](examples/) for complete benchmark YAMLs.
 
 | Parameter | Description |
 |-----------|-------------|
-| `source` | Repository to download from: `geo`, `zenodo`, `figshare`, `sra`, `ensembl`, `vcp`, `scperturb`, `biostudies`, `hca` |
+| `source` | Repository to download from: `geo`, `zenodo`, `figshare`, `sra`, `ensembl`, `vcp`, `scperturb`, `biostudies`, `hca`, `experimenthub`, `scanpy` |
 | `accession` | Accession ID within the source repository |
 | `uri` | URI to fetch directly — `https://`, `http://`, or `file:///` (mutually exclusive with `source`/`accession`) |
 | `hash` | Expected hash for single-file datasets, e.g. `sha256:abc123…` — download fails on mismatch |

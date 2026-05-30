@@ -82,5 +82,28 @@ fi
 rm -rf "$outdir"
 pass "missing file:// path produces error"
 
+# ── test: extension-less file is named by sniffed magic bytes (zip) ──────────
+# Regression: a download with no extension (e.g. an API endpoint basename like
+# .../datafile/6154417) must still get a sensible suffix, and the extension must
+# be derived from the basename — not from a dot in the (mktemp) temp dir path.
+
+zipfix=$(mktemp -d)/6154417            # extension-less basename
+printf 'PK\x03\x04rest-of-zip' > "$zipfix"
+outdir=$(mktemp -d)
+bash "$SCRIPT" --output_dir "$outdir" --name adamson --uri "file://$zipfix" >/dev/null 2>&1
+[[ -f "$outdir/adamson.zip" ]] || fail "extension-less zip should be named adamson.zip (got: $(ls "$outdir"))"
+rm -rf "$outdir" "$(dirname "$zipfix")"
+pass "extension-less file with zip magic is named <name>.zip"
+
+# ── test: extension-less gzip magic -> .gz ───────────────────────────────────
+
+gzfix=$(mktemp -d)/blob
+printf '\x1f\x8b\x08\x00data' > "$gzfix"
+outdir=$(mktemp -d)
+bash "$SCRIPT" --output_dir "$outdir" --name d --uri "file://$gzfix" >/dev/null 2>&1
+[[ -f "$outdir/d.gz" ]] || fail "extension-less gzip should be named d.gz (got: $(ls "$outdir"))"
+rm -rf "$outdir" "$(dirname "$gzfix")"
+pass "extension-less file with gzip magic is named <name>.gz"
+
 echo
 echo "All tests passed."

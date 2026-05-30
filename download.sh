@@ -157,12 +157,34 @@ mkdir -p "$output_dir"
 if [[ ${#matches[@]} -eq 1 ]]; then
     # single file: rename to $name<ext> for a predictable output path
     src="${matches[0]}"
-    ext="${src##*.}"
-    # preserve compound extensions like .mtx.gz
-    case "$src" in
-        *.tar.gz|*.mtx.gz|*.tsv.gz|*.csv.gz|*.txt.gz|*.h5ad.gz) ext="${src##*${src%.*.*}.}" ;;
+    base=$(basename "$src")
+    # Derive the extension from the BASENAME (not the full path: a temp dir like
+    # /tmp/tmp.AbCd/file would otherwise pick up the dot in the dir name).
+    case "$base" in
+        *.tar.gz) ext="tar.gz" ;;
+        *.mtx.gz) ext="mtx.gz" ;;
+        *.tsv.gz) ext="tsv.gz" ;;
+        *.csv.gz) ext="csv.gz" ;;
+        *.txt.gz) ext="txt.gz" ;;
+        *.h5ad.gz) ext="h5ad.gz" ;;
+        *.*) ext="${base##*.}" ;;
+        *) ext="" ;;  # no extension in the basename
     esac
-    cp "$src" "$output_dir/$name.$ext"
+    # Extension-less downloads (e.g. an API endpoint like .../datafile/6154417):
+    # sniff the magic bytes so the output still gets a sensible suffix.
+    if [[ -z $ext ]]; then
+        magic=$(od -An -tx1 -N4 "$src" 2>/dev/null | tr -d ' \n')
+        case "$magic" in
+            504b0304|504b0506|504b0708) ext="zip" ;;
+            1f8b*)                      ext="gz" ;;
+            89484446)                   ext="h5" ;;   # \x89HDF -> HDF5 (e.g. .h5ad)
+        esac
+    fi
+    if [[ -n $ext ]]; then
+        cp "$src" "$output_dir/$name.$ext"
+    else
+        cp "$src" "$output_dir/$name"
+    fi
 else
     for f in "${matches[@]}"; do
         cp "$f" "$output_dir/$(basename "$f")"

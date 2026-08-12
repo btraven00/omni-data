@@ -12,6 +12,13 @@
 #                            file://   local path (non-reproducible)
 #                            http/https://  passed to hapiq's url downloader
 #                            s3://     not yet implemented
+#   --uri_type <t>         What --uri points at: "file" or "directory". Optional;
+#                          when omitted the type is inferred (an http(s) URI
+#                          ending in "/" is a directory; a local path is whatever
+#                          it is on disk). Declare it to have the run fail when
+#                          the URI is not that type, instead of quietly fetching
+#                          the wrong thing: an http directory requested without
+#                          its trailing slash otherwise yields its index page.
 #
 # Required with --accession:
 #   --source <src>         Repository source: geo, zenodo, figshare, sra,
@@ -38,6 +45,7 @@ name=""
 source=""
 accession=""
 uri=""
+uri_type=""
 hash=""
 include_ext=""
 exclude_ext=""
@@ -59,6 +67,7 @@ while [[ $# -gt 0 ]]; do
         --source)           source=$2;           shift 2 ;;
         --accession)        accession=$2;        shift 2 ;;
         --uri)              uri=$2;              shift 2 ;;
+        --uri-type|--uri_type)            uri_type=$2;         shift 2 ;;
         --hash)             hash=$2;             shift 2 ;;
         --include-ext|--include_ext)      include_ext=$2;      shift 2 ;;
         --exclude-ext|--exclude_ext)      exclude_ext=$2;      shift 2 ;;
@@ -83,6 +92,12 @@ done
 [[ -n $accession && -n $uri ]] && die "use either --accession or --uri, not both"
 [[ -n $accession || -n $uri ]] || die "one of --accession or --uri is required"
 
+case "$uri_type" in
+    ""|file|directory) ;;
+    *) die "--uri_type must be 'file' or 'directory', got: $uri_type" ;;
+esac
+[[ -n $uri_type && -z $uri ]] && die "--uri_type only applies to --uri"
+
 if [[ -n $uri ]]; then
     case "$uri" in
         file://*)        source="file" ;;
@@ -101,6 +116,11 @@ if [[ $source == "file" ]]; then
     local_path="${uri#file://}"
     [[ -e $local_path ]] || die "local path does not exist: $local_path"
     echo "WARNING: source=file is non-reproducible — result depends on local filesystem state" >&2
+    # A declared type is an assertion about the path, checked before copying:
+    # the point of stating it is to fail on a wrong path, not to discover the
+    # mismatch later as a missing or unexpected output file.
+    [[ $uri_type == directory && ! -d $local_path ]] && die "--uri_type directory but not a directory: $local_path"
+    [[ $uri_type == file      && ! -f $local_path ]] && die "--uri_type file but not a regular file: $local_path"
     if [[ -f $local_path ]]; then
         cp "$local_path" "$tmpdir/$(basename "$local_path")"
     elif [[ -d $local_path ]]; then
@@ -110,6 +130,10 @@ if [[ $source == "file" ]]; then
     fi
 else
     args=(download "$source" "$accession" --out "$tmpdir" -y)
+    # hapiq infers a directory from a trailing "/"; --directory says so outright,
+    # which is what keeps a slash lost in a YAML edit from silently turning a
+    # dataset fetch into a download of the server's index page.
+    [[ $uri_type == directory ]] && args+=(--directory)
     [[ -n $hash             ]] && args+=(--hash "$hash")
     [[ -n $include_ext      ]] && args+=(--include-ext "$include_ext")
     [[ -n $exclude_ext      ]] && args+=(--exclude-ext "$exclude_ext")
